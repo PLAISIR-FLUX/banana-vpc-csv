@@ -10,6 +10,47 @@ import (
 	"time"
 )
 
+type Client struct {
+	config          Config
+	hosts           []string
+	freeConnCh      chan *persistentConn
+	numConnsPerHost map[string]int
+	allCons         map[int]*persistentConn
+	connIdx         int
+	rawConnIdx      int
+	mu              sync.Mutex
+	t0              time.Time
+	closed          bool
+}
+
+type TLSMode int
+
+const (
+	TLSExplicit TLSMode = 0
+	TLSImplicit TLSMode = 1
+)
+
+type stubResponse struct {
+	code int
+	msg  string
+}
+
+type Config struct {
+	User               string
+	Password           string
+	ConnectionsPerHost int
+	Timeout            time.Duration
+	TLSConfig          *tls.Config
+	TLSMode            TLSMode
+	IPv6Lookup         bool
+	Logger             io.Writer
+	ServerLocation     *time.Location
+	ActiveTransfers    bool
+	ActiveListenAddr   string
+	DisableEPSV        bool
+	stubResponses      map[string]stubResponse
+}
+
 type Error interface {
 	error
 	Temporary() bool
@@ -53,47 +94,6 @@ func (e ftpError) Message() string {
 		return fe.Message()
 	}
 	return e.msg
-}
-
-type TLSMode int
-
-const (
-	TLSExplicit TLSMode = 0
-	TLSImplicit TLSMode = 1
-)
-
-type stubResponse struct {
-	code int
-	msg  string
-}
-
-type Config struct {
-	User               string
-	Password           string
-	ConnectionsPerHost int
-	Timeout            time.Duration
-	TLSConfig          *tls.Config
-	TLSMode            TLSMode
-	IPv6Lookup         bool
-	Logger             io.Writer
-	ServerLocation     *time.Location
-	ActiveTransfers    bool
-	ActiveListenAddr   string
-	DisableEPSV        bool
-	stubResponses      map[string]stubResponse
-}
-
-type Client struct {
-	config          Config
-	hosts           []string
-	freeConnCh      chan *persistentConn
-	numConnsPerHost map[string]int
-	allCons         map[int]*persistentConn
-	connIdx         int
-	rawConnIdx      int
-	mu              sync.Mutex
-	t0              time.Time
-	closed          bool
 }
 
 func newClient(config Config, hosts []string) *Client {

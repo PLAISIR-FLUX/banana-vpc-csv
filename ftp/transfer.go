@@ -7,36 +7,6 @@ import (
 	"strconv"
 )
 
-func (c *Client) Retrieve(path string, dest io.Writer) error {
-	size, err := c.size(path)
-	if err != nil {
-		return err
-	}
-	canResume := c.canResume()
-	var bytesSoFar int64
-	for {
-		n, err := c.transferFromOffset(path, dest, nil, bytesSoFar)
-		bytesSoFar += n
-		if err == nil {
-			break
-		} else if n == 0 {
-			return err
-		} else if !canResume {
-			return ftpError{
-				err:       fmt.Errorf("%s (can't resume)", err),
-				temporary: true,
-			}
-		}
-	}
-	if size != -1 && bytesSoFar != size {
-		return ftpError{
-			err:       fmt.Errorf("expected %d bytes, got %d", size, bytesSoFar),
-			temporary: true,
-		}
-	}
-	return nil
-}
-
 func (c *Client) Store(path string, src io.Reader) error {
 	canResume := len(c.hosts) == 1 && c.canResume()
 	seeker, ok := src.(io.Seeker)

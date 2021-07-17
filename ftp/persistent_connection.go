@@ -11,13 +11,6 @@ import (
 	"time"
 )
 
-type RawConn interface {
-	SendCommand(f string, args ...interface{}) (int, string, error)
-	PrepareDataConn() (func() (net.Conn, error), error)
-	ReadResponse() (int, string, error)
-	Close() error
-}
-
 type persistentConn struct {
 	controlConn      net.Conn
 	dataConn         net.Conn
@@ -31,6 +24,28 @@ type persistentConn struct {
 	epsvNotSupported bool
 	currentType      string
 	host             string
+}
+
+type dataConn struct {
+	net.Conn
+	Timeout time.Duration
+}
+
+type RawConn interface {
+	SendCommand(f string, args ...interface{}) (int, string, error)
+	PrepareDataConn() (func() (net.Conn, error), error)
+	ReadResponse() (int, string, error)
+	Close() error
+}
+
+func (c *dataConn) Read(buf []byte) (int, error) {
+	c.Conn.SetReadDeadline(time.Now().Add(c.Timeout))
+	return c.Conn.Read(buf)
+}
+
+func (c *dataConn) Write(buf []byte) (int, error) {
+	c.Conn.SetWriteDeadline(time.Now().Add(c.Timeout))
+	return c.Conn.Write(buf)
 }
 
 func (pconn *persistentConn) SendCommand(f string, args ...interface{}) (int, string, error) {
@@ -276,21 +291,6 @@ PASV:
 	}
 
 	return net.JoinHostPort(ip.String(), strconv.Itoa(port)), nil
-}
-
-type dataConn struct {
-	net.Conn
-	Timeout time.Duration
-}
-
-func (c *dataConn) Read(buf []byte) (int, error) {
-	c.Conn.SetReadDeadline(time.Now().Add(c.Timeout))
-	return c.Conn.Read(buf)
-}
-
-func (c *dataConn) Write(buf []byte) (int, error) {
-	c.Conn.SetWriteDeadline(time.Now().Add(c.Timeout))
-	return c.Conn.Write(buf)
 }
 
 func (pconn *persistentConn) prepareDataConn() (func() (net.Conn, error), error) {
