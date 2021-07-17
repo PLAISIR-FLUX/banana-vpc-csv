@@ -51,6 +51,7 @@ func main() {
 			ftpClient, _ := ftp.DialConfig(config, os.Getenv("HOST"))
 			f, _ = os.Open("product_id_shop_1.csv")
 			defer f.Close()
+			ftpClient.Delete("product_id_shop_1.csv")
 			ftpClient.Store("product_id_shop_1.csv", f)
 		}()
 	}
