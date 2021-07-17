@@ -12,9 +12,6 @@ import (
 )
 
 func main() {
-	// for {
-	// 	<-time.After(3600 * time.Second)
-	// 	go func() {
 	client := &http.Client{}
 	req, _ := http.NewRequest("GET", "https://b2b.banana-vpc.com/modules/customexporter/downloads/product_id_shop_1.csv", nil)
 	req.Header.Add("User-Agent", "")
@@ -53,6 +50,4 @@ func main() {
 	defer f.Close()
 	ftpClient.Delete("product_id_shop_1.csv")
 	ftpClient.Store("product_id_shop_1.csv", f)
-	// 		}()
-	// 	}
 }
