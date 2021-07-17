@@ -53,6 +53,5 @@ func main() {
 			defer f.Close()
 			ftpClient.Store("/product_id_shop_1.csv", f)
 		}()
-		http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 	}
 }
