@@ -13,7 +13,7 @@ import (
 
 func main() {
 	for {
-		<-time.After(3600 * time.Second)
+		<-time.After(10 * time.Second)
 		go func() {
 			client := &http.Client{}
 			req, _ := http.NewRequest("GET", "https://b2b.banana-vpc.com/modules/customexporter/downloads/product_id_shop_1.csv", nil)
